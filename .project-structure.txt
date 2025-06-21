@@ -1,0 +1,21 @@
+.
+├── pdm.lock
+├── pyproject.toml
+├── README.md
+├── src
+│   └── vidaplena_api
+│       ├── config.py
+│       ├── models.py
+│       ├── main.py
+│       ├── repository
+│       │   ├── exceptions.py
+│       │   ├── generics.py
+│       │   └── medicine.py
+│       ├── router
+│       │   └── medicine.py
+│       ├── service
+│       │   └── medicine.py
+│       └── utils.py
+└── tests
+    ├── test_medicines.py
+    └── test_utils.py

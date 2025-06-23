@@ -1,5 +1,5 @@
 [project]
-name = "vidaplena-api"
+name = "medical-office-api"
 version = "0.1.0"
 description = "Default template for PDM package"
 authors = [
@@ -54,9 +54,20 @@ requires-python = "==3.13.*"
 readme = "README.md"
 license = {text = "MIT"}
 
+[project.optional-dependencies]
+static-type-analyzer = [
+    "pyrefly>=0.20.2",
+]
+
+[tool.pdm.scripts]
+dev = "fastapi dev app/main.py"
+tests = "pytest"
+type-checks = "pyrefly check"
 
 [tool.pdm]
 distribution = false
 
 [tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
 asyncio_mode = "auto"

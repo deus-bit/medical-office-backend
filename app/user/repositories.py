@@ -1,15 +1,17 @@
-from app.utils import Interval, RegEx, Number
 from app.user.models import (
     AccountModel, AccountAttribute,
     ProfileModel, ProfileAttribute,
     RoleModel, RoleAttribute
 )
 from app.exceptions import *
-from app.generics import *
+from app.base.repositories import BaseRepository, SQLRepository
+from app.base.models import FindQuery, FilterBy
 from app.config import settings
-from sqlmodel import create_engine
+from app.utils import Interval, RegEx, Number
+from sqlmodel import create_engine, select
 from datetime import datetime, date
 from typing import override
+from abc import ABC, abstractmethod
 
 class AccountFilterBy(FilterBy, total=False):
     id: Interval[Number]
@@ -18,7 +20,7 @@ class AccountFilterBy(FilterBy, total=False):
     enabled: bool
 
 
-class AccountFindQuery(FindQuery[AccountModel, AccountFilterBy, AccountAttribute]):
+class AccountFindQuery(FindQuery[AccountFilterBy, AccountAttribute]):
     ...
 
 
@@ -59,7 +61,7 @@ class ProfileFilterBy(FilterBy, total=False):
     phone: Interval[int]
 
 
-class ProfileFindQuery(FindQuery[ProfileModel, ProfileFilterBy, ProfileAttribute]):
+class ProfileFindQuery(FindQuery[ProfileFilterBy, ProfileAttribute]):
     ...
 
 
@@ -96,7 +98,7 @@ class RoleFilterBy(FilterBy, total=False):
     name: RegEx
 
 
-class RoleFindQuery(FindQuery[RoleModel, RoleFilterBy, RoleAttribute]):
+class RoleFindQuery(FindQuery[RoleFilterBy, RoleAttribute]):
     ...
 
 

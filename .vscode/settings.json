@@ -11,5 +11,7 @@
   ],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
-  "workbench.editor.labelFormat": "short"
+  "workbench.editor.labelFormat": "short",
+  "python.analysis.typeCheckingMode": "off",
+  "python.analysis.autoImportCompletions": true
 }

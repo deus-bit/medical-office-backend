@@ -1,16 +1,16 @@
-from app.utils import Positive
+from app.base.models import BaseModel, Field
+from datetime import datetime
 from typing import Annotated
-from pydantic import BaseModel, Field
 
 class MedicineRequestSchema(BaseModel):
     name: Annotated[str, Field(max_length=63)]
     description: Annotated[str, Field(max_length=511)]
     intake_type: Annotated[str, Field(max_length=31)]
-    dose: Positive[float]
+    dose: Annotated[float, Field(gt=0)]
     measurement: Annotated[str, Field(max_length=23)]
 
 
 class MedicineResponseSchema(MedicineRequestSchema):
-    id: int
-    created_at: str
-    updated_at: str
+    id: Annotated[int, Field(gt=0)]
+    created_at: Annotated[datetime, Field()]
+    updated_at: Annotated[datetime, Field()]

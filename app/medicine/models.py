@@ -1,16 +1,16 @@
+from app.base.models import SQLModel, MappedColumn
 from typing import Literal, Annotated
-from sqlmodel import SQLModel, Field
 from datetime import datetime
 
-MedicineAttribute = Literal['id', 'created_at', 'name', 'description', 'intake_type', 'dose', 'measurement']
+MedicineAttribute = Literal['id', 'created_at', 'updated_at', 'name', 'description', 'intake_type', 'dose', 'measurement']
 
 class MedicineModel(SQLModel, table=True):
-    __tablename__ = 'medicines'
+    __tablename__: str = 'medicines'
 
-    id: Annotated[int | None, Field(None, gt=0, primary_key=True)]
-    created_at: Annotated[datetime, Field(default_factory=datetime.now)]
-    name: Annotated[str, Field(max_length=63)]
-    description: Annotated[str, Field(max_length=511)]
-    intake_type: Annotated[str, Field(max_length=31)]
-    dose: Annotated[float, Field(gt=0)]
-    measurement: Annotated[str, Field(max_length=31)]
+    created_at: Annotated[datetime, MappedColumn(default_factory=datetime.now)]
+    updated_at: Annotated[datetime, MappedColumn(default_factory=datetime.now)]
+    name: Annotated[str, MappedColumn(max_length=63)]
+    description: Annotated[str, MappedColumn(max_length=511)]
+    intake_type: Annotated[str, MappedColumn(max_length=31)]
+    dose: Annotated[float, MappedColumn(gt=0)]
+    measurement: Annotated[str, MappedColumn(max_length=31)]

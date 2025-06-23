@@ -1,14 +1,16 @@
-from app.utils import Interval
 from app.prescription.models import (
     PrescriptionModel, PrescriptionAttribute,
     MedicationScheduleModel, MedicationScheduleAttribute
 )
-from app.generics import *
+from app.base.repositories import BaseRepository, SQLRepository
+from app.base.models import FindQuery, FilterBy
 from app.exceptions import *
 from app.config import settings
+from app.utils import Interval
 from sqlmodel import create_engine
 from datetime import datetime
 from typing import override
+from abc import ABC
 
 class PrescriptionFilterBy(FilterBy, total=False):
     id: Interval[int]
@@ -19,7 +21,7 @@ class PrescriptionFilterBy(FilterBy, total=False):
     canceled: bool
 
 
-class PrescriptionFindQuery(FindQuery[PrescriptionModel, PrescriptionFilterBy, PrescriptionAttribute]):
+class PrescriptionFindQuery(FindQuery[PrescriptionFilterBy, PrescriptionAttribute]):
     ...
 
 
@@ -58,7 +60,7 @@ class MedicationScheduleFilterBy(FilterBy, total=False):
     amount: Interval[int]
 
 
-class MedicationScheduleFindQuery(FindQuery[MedicationScheduleModel, MedicationScheduleFilterBy, MedicationScheduleAttribute]):
+class MedicationScheduleFindQuery(FindQuery[MedicationScheduleFilterBy, MedicationScheduleAttribute]):
     ...
 
 

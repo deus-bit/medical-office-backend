@@ -2,17 +2,13 @@ from fastapi import APIRouter, HTTPException, status, Path, Query, Body
 from app.medicine.repositories import MedicineFindQuery
 from app.medicine.services import MedicineService
 from app.medicine.schemas import MedicineRequestSchema, MedicineResponseSchema
-from app.medicine.models import MedicineAttribute
+from app.medicine.models import MedicineModel
 from app.exceptions import *
-from app.generics import Page
-from app.utils import Positive
+from app.base.models import Page
+from app.utils import Positive, parse_last_retrieved
 from collections.abc import Callable
 from typing import Annotated
 from datetime import datetime
-import logging
-
-logger = logging.getLogger('uvicorn.error')
-logger.setLevel(logging.DEBUG)
 
 class MedicineRouter(APIRouter):
     def __init__(self, prefix: str, medicine_service_factory: Callable[[], MedicineService]) -> None:
@@ -44,35 +40,32 @@ class MedicineRouter(APIRouter):
         ### Example
         ~~~json
         {
-            "name": "Ibuprofeno",
-            "description": "Analgésico y antiinflamatorio para el tratamiento del dolor y fiebre.",
-            "intake_type": "Comprimido",
-            "dose": 400,
-            "measurement": "mg"
+          "name": "Ibuprofeno",
+          "description": "Analgésico y antiinflamatorio para el tratamiento del dolor y fiebre.",
+          "intake_type": "Comprimido",
+          "dose": 400,
+          "measurement": "mg"
         }
         ~~~
         """
-        logger.debug('Hello, World!')
-        return await self.svc().add(medicine)
+        return MedicineResponseSchema.model_validate((await self.svc().add(MedicineModel.model_validate(medicine))).model_dump())
 
-    async def get_medicine(self, id: Annotated[Positive[int], Path()],
-                           attr: Annotated[set[MedicineAttribute], Query()]
-                           ) -> MedicineResponseSchema:
+    async def get_medicine(self, id: Annotated[Positive[int], Path()]) -> MedicineResponseSchema:
         """
         ### Examples
           - http://localhost:8000/v1/medicine/101?attr=name,description,created_at
           - http://localhost:8000/v1/medicine/102?attr=name
         """
         try:
-            return await self.svc().find_by_id(id).model_dump(include=attr or None)
-        except EntityNotFound:
+            medicine: MedicineModel | None = await self.svc().find_by_id(id)
+            if medicine:
+                return MedicineResponseSchema.model_validate(medicine)
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Medicine not found.")
         except ConnectionTimeout:
             raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Database connection timeout.")
 
-    async def find_medicines(self, attr: Annotated[set[MedicineAttribute], Query()],
-                             query: Annotated[MedicineFindQuery, Body()]
-                             ) -> Page[MedicineResponseSchema, MedicineFindQuery]:
+    async def find_medicines(self, query: Annotated[MedicineFindQuery, Body()]
+                             ) -> Page[MedicineResponseSchema, MedicineFindQuery] | None:
         """
         ### Example
         url: http://localhost:8000/v1/medicine/find/?attr=name,description,created_at
@@ -93,9 +86,16 @@ class MedicineRouter(APIRouter):
         ~~~
         """
         try:
+            if query.last:
+                query.last = parse_last_retrieved(list(query.last), MedicineModel, query.order_by)
             page = await self.svc().find(query)
-            page.data = [MedicineResponseSchema(**medicine.model_dump(include=attr or None)) for medicine in page.data]
-            return page
+            if not page:
+                return None
+            response_page= Page[MedicineResponseSchema, MedicineFindQuery](
+                next=page.next,
+                data=[MedicineResponseSchema.model_validate(medicine) for medicine in page.data],
+            )
+            return response_page
         except ConnectionTimeout:
             raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Database connection timeout.")
 
@@ -103,7 +103,7 @@ class MedicineRouter(APIRouter):
                            medicine: Annotated[MedicineRequestSchema, Body()]
                            ) -> MedicineResponseSchema:
         try:
-            return await self.svc().update(id, medicine)
+            return await self.svc().update(id, MedicineModel.model_validate(medicine))
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Medicine not found.")
 
@@ -153,7 +153,7 @@ class MedicineRouter(APIRouter):
                                 name: Annotated[str, Body()]
                                 ) -> MedicineResponseSchema:
         try:
-            return await self.svc().update_name(id, name)
+            return MedicineResponseSchema.model_validate(await self.svc().update_name(id, name))
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Medicine not found.")
 
@@ -161,7 +161,7 @@ class MedicineRouter(APIRouter):
                                        description: Annotated[str, Body()]
                                        ) -> MedicineResponseSchema:
         try:
-            return await self.svc().update_description(id, description)
+            return MedicineResponseSchema.model_validate(await self.svc().update_description(id, description))
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Medicine not found.")
 
@@ -169,7 +169,7 @@ class MedicineRouter(APIRouter):
                                        intake_type: Annotated[str, Body()]
                                        ) -> MedicineResponseSchema:
         try:
-            return await self.svc().update_intake_type(id, intake_type)
+            return MedicineResponseSchema.model_validate(await self.svc().update_intake_type(id, intake_type))
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Medicine not found.")
 
@@ -177,7 +177,7 @@ class MedicineRouter(APIRouter):
                                 dose: Annotated[float, Body()]
                                 ) -> MedicineResponseSchema:
         try:
-            return await self.svc().update_dose(id, dose)
+            return MedicineResponseSchema.model_validate(await self.svc().update_dose(id, dose))
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Medicine not found.")
 
@@ -185,6 +185,6 @@ class MedicineRouter(APIRouter):
                                        measurement: Annotated[str, Body()]
                                        ) -> MedicineResponseSchema:
         try:
-            return await self.svc().update_measurement(id, measurement)
+            return MedicineResponseSchema.model_validate(await self.svc().update_measurement(id, measurement))
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Medicine not found.")

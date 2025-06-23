@@ -1,20 +1,22 @@
-from app.utils import Interval, RegEx
 from app.schedule.models import (
     ScheduleModel, ScheduleAttribute,
     ScheduleCycleModel, ScheduleCycleAttribute
 )
-from app.generics import *
+from app.base.repositories import BaseRepository, SQLRepository
+from app.base.models import FindQuery, FilterBy
 from app.exceptions import *
 from app.config import settings
+from app.utils import Interval
 from sqlmodel import create_engine
 from datetime import datetime
 from typing import override
+from abc import ABC
 
 class ScheduleFilterBy(FilterBy, total=False):
     id: Interval[int]
 
 
-class ScheduleFindQuery(FindQuery[ScheduleModel, ScheduleFilterBy, ScheduleAttribute]):
+class ScheduleFindQuery(FindQuery[ScheduleFilterBy, ScheduleAttribute]):
     ...
 
 
@@ -54,7 +56,7 @@ class ScheduleCycleFilterBy(FilterBy, total=False):
     schedule_id: Interval[int]
 
 
-class ScheduleCycleFindQuery(FindQuery[ScheduleCycleModel, ScheduleCycleFilterBy, ScheduleCycleAttribute]):
+class ScheduleCycleFindQuery(FindQuery[ScheduleCycleFilterBy, ScheduleCycleAttribute]):
     ...
 
 

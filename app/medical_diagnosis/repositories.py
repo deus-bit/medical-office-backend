@@ -1,11 +1,13 @@
-from app.utils import Interval, RegEx
 from app.medical_diagnosis.models import MedicalDiagnosisModel, MedicalDiagnosisAttribute
-from app.generics import *
+from app.base.repositories import BaseRepository, SQLRepository
+from app.base.models import FindQuery, FilterBy
 from app.exceptions import *
 from app.config import settings
+from app.utils import Interval, RegEx
 from sqlmodel import create_engine
 from datetime import datetime
 from typing import override
+from abc import ABC
 
 class MedicalDiagnosisFilterBy(FilterBy, total=False):
     id: Interval[int]
@@ -15,7 +17,7 @@ class MedicalDiagnosisFilterBy(FilterBy, total=False):
     disease: RegEx
 
 
-class MedicalDiagnosisFindQuery(FindQuery[MedicalDiagnosisModel, MedicalDiagnosisFilterBy, MedicalDiagnosisAttribute]):
+class MedicalDiagnosisFindQuery(FindQuery[MedicalDiagnosisFilterBy, MedicalDiagnosisAttribute]):
     ...
 
 

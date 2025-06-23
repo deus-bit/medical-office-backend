@@ -1,15 +1,18 @@
-from app.utils import Interval, RegEx
 from app.medicine.models import MedicineModel, MedicineAttribute
-from app.generics import *
+from app.base.repositories import BaseRepository, SQLRepository
+from app.base.models import FindQuery, FilterBy
 from app.exceptions import *
 from app.config import settings
+from app.utils import Interval, RegEx
 from sqlmodel import create_engine
 from datetime import datetime
 from typing import override
+from abc import ABC
 
 class MedicineFilterBy(FilterBy, total=False):
     id: Interval[int]
     created_at: Interval[datetime]
+    updated_at: Interval[datetime]
     name: RegEx
     description: RegEx
     intake_type: RegEx
@@ -17,7 +20,7 @@ class MedicineFilterBy(FilterBy, total=False):
     measurement: RegEx
 
 
-class MedicineFindQuery(FindQuery[MedicineModel, MedicineFilterBy, MedicineAttribute]):
+class MedicineFindQuery(FindQuery[MedicineFilterBy, MedicineAttribute]):
     ...
 
 
@@ -25,7 +28,7 @@ class MedicineRepository(BaseRepository[MedicineModel, MedicineFindQuery], ABC):
     ...
 
 
-class InMemoryMedicineRepository(SQLRepository[MedicineModel, MedicineFindQuery]):
+class InMemoryMedicineRepository(SQLRepository[MedicineModel, MedicineFindQuery], MedicineRepository):
     @override
     def __init__(self) -> None:
         super().__init__(
@@ -38,7 +41,7 @@ class InMemoryMedicineRepository(SQLRepository[MedicineModel, MedicineFindQuery]
         )
 
 
-class SupabaseMedicineRepository(SQLRepository[MedicineModel, MedicineFindQuery]):
+class SupabaseMedicineRepository(SQLRepository[MedicineModel, MedicineFindQuery], MedicineRepository):
     @override
     def __init__(self) -> None:
         super().__init__(

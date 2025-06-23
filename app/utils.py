@@ -1,9 +1,9 @@
 # from fastapi import Path, Query, Header, Body
-from typing import Annotated, Literal, Any, ClassVar, Self
+from typing import Annotated, Literal, Any, ClassVar
 from abc import ABC, abstractmethod
 from enum import Enum
 from datetime import date, datetime
-from pydantic import Field, BaseModel, BeforeValidator
+from pydantic import Field, BaseModel
 from pydantic_core import CoreSchema, core_schema
 import httpx
 import re
@@ -189,7 +189,7 @@ class HttpClient(ABC):
         ...
 
     @abstractmethod
-    def put(self, url: str, data: dict | str | None = None, headers: dict[str, str] | None = None) -> Any:
+    def put(self, url: str, data: dict | str | None = None, json: dict[str, Any] | None = None, headers: dict[str, str] | None = None) -> Any:
         ...
 
     @abstractmethod
@@ -211,8 +211,8 @@ class HttpxClient(HttpClient):
         response.raise_for_status()
         return response.json()
 
-    def put(self, url: str, data: dict | str | None = None, headers: dict[str, str] | None = None) -> Any:
-        response = self.client.put(url, data=data, headers=headers)
+    def put(self, url: str, data: dict | str | None = None, json: dict[str, Any] | None = None, headers: dict[str, str] | None = None) -> Any:
+        response = self.client.put(url, data=data, json=json, headers=headers)
         response.raise_for_status()
         return response.json()
 
@@ -220,3 +220,19 @@ class HttpxClient(HttpClient):
         response = self.client.delete(url, headers=headers)
         response.raise_for_status()
         return response.json()
+
+def parse_last_retrieved(last_retrieved, model, order_by):
+    if len(last_retrieved) == 2:
+        field = model.model_fields[order_by[0]]
+        expected_type = field.annotation
+        # Only cast if not already correct type
+        if not isinstance(last_retrieved[1], expected_type):
+            if expected_type is datetime:
+                last_retrieved[1] = datetime.fromisoformat(last_retrieved[1])
+            else:
+                last_retrieved[1] = expected_type(last_retrieved[1])
+    if len(last_retrieved) >= 1:
+        # id is usually int, but you can generalize if needed
+        if not isinstance(last_retrieved[0], int):
+            last_retrieved[0] = int(last_retrieved[0])
+    return last_retrieved

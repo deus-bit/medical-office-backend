@@ -2,10 +2,13 @@
 # It is not intended for manual editing.
 
 [metadata]
-groups = ["default"]
-strategy = ["cross_platform", "inherit_metadata"]
-lock_version = "4.4.1"
-content_hash = "sha256:50dbd4e0982f01fdeb3a24913e73223a055f950d65cf2788f47aebbacd2f7c5d"
+groups = ["default", "static-type-analyzer"]
+strategy = ["inherit_metadata"]
+lock_version = "4.5.0"
+content_hash = "sha256:da211355a2c002e6a4c5c63bce5b10acd3bcb4f3a7accbf75f7787ddbfd01557"
+
+[[metadata.targets]]
+requires_python = "==3.13.*"
 
 [[package]]
 name = "annotated-types"
@@ -13,6 +16,9 @@ version = "0.7.0"
 requires_python = ">=3.8"
 summary = "Reusable constraint types to use with typing.Annotated"
 groups = ["default"]
+dependencies = [
+    "typing-extensions>=4.0.0; python_version < \"3.9\"",
+]
 files = [
     {file = "annotated_types-0.7.0-py3-none-any.whl", hash = "sha256:1f02e8b43a8fbbc3f3e0d4f0f4bfc8131bcb4eebe8849b8e5c773f3a1c582a53"},
     {file = "annotated_types-0.7.0.tar.gz", hash = "sha256:aff07c09a53a08bc8cfccb9c85b05f1aa9a2a6f23728d790723543408344ce89"},
@@ -25,8 +31,10 @@ requires_python = ">=3.9"
 summary = "High level compatibility layer for multiple asynchronous event loop implementations"
 groups = ["default"]
 dependencies = [
+    "exceptiongroup>=1.0.2; python_version < \"3.11\"",
     "idna>=2.8",
     "sniffio>=1.1",
+    "typing-extensions>=4.5; python_version < \"3.13\"",
 ]
 files = [
     {file = "anyio-4.9.0-py3-none-any.whl", hash = "sha256:9f76d541cad6e36af7beb62e978876f3b41e3e04f2c1fbf0884604c0a9c4d93c"},
@@ -52,6 +60,7 @@ summary = "Composable command line interface toolkit"
 groups = ["default"]
 dependencies = [
     "colorama; platform_system == \"Windows\"",
+    "importlib-metadata; python_version < \"3.8\"",
 ]
 files = [
     {file = "click-8.1.8-py3-none-any.whl", hash = "sha256:63c132bbbed01578a06712a2d1f497bb62d9c1c0d329b7903a866228027263b2"},
@@ -153,6 +162,9 @@ version = "0.14.0"
 requires_python = ">=3.7"
 summary = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
 groups = ["default"]
+dependencies = [
+    "typing-extensions; python_version < \"3.8\"",
+]
 files = [
     {file = "h11-0.14.0-py3-none-any.whl", hash = "sha256:e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761"},
     {file = "h11-0.14.0.tar.gz", hash = "sha256:8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d"},
@@ -327,6 +339,8 @@ requires_python = ">=3.8"
 summary = "PostgreSQL database adapter for Python"
 groups = ["default"]
 dependencies = [
+    "backports-zoneinfo>=0.2.0; python_version < \"3.9\"",
+    "typing-extensions>=4.6; python_version < \"3.13\"",
     "tzdata; sys_platform == \"win32\"",
 ]
 files = [
@@ -473,6 +487,24 @@ files = [
 ]
 
 [[package]]
+name = "pyrefly"
+version = "0.20.2"
+requires_python = ">=3.8"
+summary = "A faster Python type checker written in Rust"
+groups = ["static-type-analyzer"]
+files = [
+    {file = "pyrefly-0.20.2-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:3d798b01cdebf5b13c825de3c0cc21295791c58e78c160f5ce3a598c6f260eac"},
+    {file = "pyrefly-0.20.2-py3-none-macosx_11_0_arm64.whl", hash = "sha256:27808c11ded818137ff903aba64adba22ac934a67ddb8982dce4bec8e68854cf"},
+    {file = "pyrefly-0.20.2-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1652bb80f6e8d2a85f0a72ed6633f9bfa564089c409a4e720a1487c51190d66d"},
+    {file = "pyrefly-0.20.2-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:03c771fd505e3174feac5457917bedb1baa814c41d9eea66ac1649dc62d84a8e"},
+    {file = "pyrefly-0.20.2-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bde72fd9e73fdfe5ce7d7b61af4db9093b91ec8c05f77b2b77657f86b16d8573"},
+    {file = "pyrefly-0.20.2-py3-none-win32.whl", hash = "sha256:7830e0603fd25c1b8007c791f8dda83f4b73a89fe8d3596adf3c296902c0a8a0"},
+    {file = "pyrefly-0.20.2-py3-none-win_amd64.whl", hash = "sha256:3ead7db6b68c69a949aa5fccd69dd5ba4bb76fe0db22a2745a0e931972e87a1b"},
+    {file = "pyrefly-0.20.2-py3-none-win_arm64.whl", hash = "sha256:3c39f3df6f000ad293beaf19b3b544cf573a990accbce12535fea0a69299d3d3"},
+    {file = "pyrefly-0.20.2.tar.gz", hash = "sha256:a4fd6443d084a6ace4cdf51c69b01452e1636e7fa487d87b5a72ad64eae4a6ca"},
+]
+
+[[package]]
 name = "pytest"
 version = "8.3.5"
 requires_python = ">=3.8"
@@ -480,9 +512,11 @@ summary = "pytest: simple powerful testing with Python"
 groups = ["default"]
 dependencies = [
     "colorama; sys_platform == \"win32\"",
+    "exceptiongroup>=1.0.0rc8; python_version < \"3.11\"",
     "iniconfig",
     "packaging",
     "pluggy<2,>=1.5",
+    "tomli>=1; python_version < \"3.11\"",
 ]
 files = [
     {file = "pytest-8.3.5-py3-none-any.whl", hash = "sha256:c69214aa47deac29fad6c2a4f590b9c4a9fdb16a403176fe154b79c0b4d4d820"},
@@ -497,6 +531,7 @@ summary = "Pytest support for asyncio"
 groups = ["default"]
 dependencies = [
     "pytest<9,>=8.2",
+    "typing-extensions>=4.12; python_version < \"3.10\"",
 ]
 files = [
     {file = "pytest_asyncio-0.26.0-py3-none-any.whl", hash = "sha256:7b51ed894f4fbea1340262bdae5135797ebbe21d8638978e35d31c6d19f72fb0"},
@@ -553,6 +588,7 @@ groups = ["default"]
 dependencies = [
     "markdown-it-py>=2.2.0",
     "pygments<3.0.0,>=2.13.0",
+    "typing-extensions<5.0,>=4.0.0; python_version < \"3.11\"",
 ]
 files = [
     {file = "rich-14.0.0-py3-none-any.whl", hash = "sha256:1c9491e1951aac09caffd42f448ee3d04e58923ffe14993f6e83068dc395d7e0"},
@@ -605,6 +641,7 @@ summary = "Database Abstraction Library"
 groups = ["default"]
 dependencies = [
     "greenlet>=1; (platform_machine == \"win32\" or platform_machine == \"WIN32\" or platform_machine == \"AMD64\" or platform_machine == \"amd64\" or platform_machine == \"x86_64\" or platform_machine == \"ppc64le\" or platform_machine == \"aarch64\") and python_version < \"3.14\"",
+    "importlib-metadata; python_version < \"3.8\"",
     "typing-extensions>=4.6.0",
 ]
 files = [
@@ -643,6 +680,7 @@ summary = "The little ASGI library that shines."
 groups = ["default"]
 dependencies = [
     "anyio<5,>=3.6.2",
+    "typing-extensions>=3.10.0; python_version < \"3.10\"",
 ]
 files = [
     {file = "starlette-0.46.2-py3-none-any.whl", hash = "sha256:595633ce89f8ffa71a015caed34a5b2dc1c0cdb3f0f1fbd1e69339cf2abeec35"},
@@ -712,6 +750,7 @@ groups = ["default"]
 dependencies = [
     "click>=7.0",
     "h11>=0.8",
+    "typing-extensions>=4.0; python_version < \"3.11\"",
 ]
 files = [
     {file = "uvicorn-0.34.1-py3-none-any.whl", hash = "sha256:984c3a8c7ca18ebaad15995ee7401179212c59521e67bfc390c07fa2b8d2e065"},

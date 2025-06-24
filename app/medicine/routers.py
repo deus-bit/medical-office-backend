@@ -103,13 +103,15 @@ class MedicineRouter(APIRouter):
                            medicine: Annotated[MedicineRequestSchema, Body()]
                            ) -> MedicineResponseSchema:
         try:
-            return await self.svc().update(id, MedicineModel.model_validate(medicine))
+            model = await self.svc().update(id, MedicineModel.model_validate(medicine))
+            return MedicineResponseSchema.model_validate(model)
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Medicine not found.")
 
     async def delete_medicine(self, id: Annotated[Positive[int], Path()]) -> MedicineResponseSchema:
         try:
-            return await self.svc().delete(id)
+            model = await self.svc().delete(id)
+            return MedicineResponseSchema.model_validate(model)
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Medicine not found.")
 

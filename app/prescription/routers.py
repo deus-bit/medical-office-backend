@@ -62,13 +62,15 @@ class PrescriptionRouter(APIRouter):
 
     async def put_prescription(self, id: Annotated[Positive[int], Path()], prescription: Annotated[PrescriptionRequestSchema, Body()]) -> PrescriptionResponseSchema:
         try:
-            return await self.svc().update(id, PrescriptionModel.model_validate(prescription))
+            model = await self.svc().update(id, PrescriptionModel.model_validate(prescription))
+            return PrescriptionResponseSchema.model_validate(model)
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Prescription not found.")
 
     async def delete_prescription(self, id: Annotated[Positive[int], Path()]) -> PrescriptionResponseSchema:
         try:
-            return await self.svc().delete(id)
+            model = await self.svc().delete(id)
+            return PrescriptionResponseSchema.model_validate(model)
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Prescription not found.")
 

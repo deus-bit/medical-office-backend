@@ -7,7 +7,7 @@ from app.user.schemas import (
     RoleRequestSchema, RoleResponseSchema,
     UserResponseSchema, UserRequestSchema
 )
-from app.user.models import AccountModel, ProfileModel, RoleModel
+from app.user.models import AccountModel, ProfileModel, RoleModel, UserModel
 from app.exceptions import *
 from app.base.models import Page
 from app.utils import Positive, parse_last_retrieved
@@ -25,7 +25,7 @@ class AccountRouter(APIRouter):
         self.add_api_route('/{id}', self.get_account, name="Get Account", methods=['get'])
         self.add_api_route('/{id}', self.put_account, name="Put Account", methods=['put'])
         self.add_api_route('/{id}', self.delete_account, name="Delete Account", methods=['delete'])
-        self.add_api_route('/{id}/created_at', self.get_account_created_at, name="Get Account Created At", methods=['get'])
+        self.add_api_route('/{id}/updated_at', self.get_account_updated_at, name="Get Account Updated At", methods=['get'])
         self.add_api_route('/{id}/email', self.get_account_email, name="Get Account Email", methods=['get'])
         self.add_api_route('/{id}/enabled', self.get_account_enabled, name="Get Account Enabled", methods=['get'])
         self.add_api_route('/{id}/email', self.put_account_email, name="Put Account Email", methods=['put'])
@@ -60,19 +60,21 @@ class AccountRouter(APIRouter):
 
     async def put_account(self, id: Annotated[Positive[int], Path()], account: Annotated[AccountRequestSchema, Body()]) -> AccountResponseSchema:
         try:
-            return await self.svc().update(id, AccountModel.model_validate(account))
+            model = await self.svc().update(id, AccountModel.model_validate(account))
+            return AccountResponseSchema.model_validate(model)
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Account not found.")
 
     async def delete_account(self, id: Annotated[Positive[int], Path()]) -> AccountResponseSchema:
         try:
-            return await self.svc().delete(id)
+            model = await self.svc().delete(id)
+            return AccountResponseSchema.model_validate(model)
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Account not found.")
 
-    async def get_account_created_at(self, id: Annotated[Positive[int], Path()]) -> datetime:
+    async def get_account_updated_at(self, id: Annotated[Positive[int], Path()]) -> datetime:
         try:
-            return await self.svc().get_created_at(id)
+            return await self.svc().get_updated_at(id)
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Account not found.")
 
@@ -110,7 +112,7 @@ class ProfileRouter(APIRouter):
         self.add_api_route('/{id}', self.get_profile, name="Get Profile", methods=['get'])
         self.add_api_route('/{id}', self.put_profile, name="Put Profile", methods=['put'])
         self.add_api_route('/{id}', self.delete_profile, name="Delete Profile", methods=['delete'])
-        self.add_api_route('/{id}/created_at', self.get_profile_created_at, name="Get Profile Created At", methods=['get'])
+        self.add_api_route('/{id}/updated_at', self.get_profile_updated_at, name="Get Profile Updated At", methods=['get'])
         self.add_api_route('/{id}/name', self.get_profile_name, name="Get Profile Name", methods=['get'])
         self.add_api_route('/{id}/name', self.put_profile_name, name="Put Profile Name", methods=['put'])
 
@@ -143,19 +145,21 @@ class ProfileRouter(APIRouter):
 
     async def put_profile(self, id: Annotated[Positive[int], Path()], profile: Annotated[ProfileRequestSchema, Body()]) -> ProfileResponseSchema:
         try:
-            return await self.svc().update(id, ProfileModel.model_validate(profile))
+            model = await self.svc().update(id, ProfileModel.model_validate(profile))
+            return ProfileResponseSchema.model_validate(model)
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Profile not found.")
 
     async def delete_profile(self, id: Annotated[Positive[int], Path()]) -> ProfileResponseSchema:
         try:
-            return await self.svc().delete(id)
+            model = await self.svc().delete(id)
+            return ProfileResponseSchema.model_validate(model)
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Profile not found.")
 
-    async def get_profile_created_at(self, id: Annotated[Positive[int], Path()]) -> datetime:
+    async def get_profile_updated_at(self, id: Annotated[Positive[int], Path()]) -> datetime:
         try:
-            return await self.svc().get_created_at(id)
+            return await self.svc().get_updated_at(id)
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Profile not found.")
 
@@ -182,6 +186,7 @@ class RoleRouter(APIRouter):
         self.add_api_route('/{id}', self.put_role, name="Put Role", methods=['put'])
         self.add_api_route('/{id}', self.delete_role, name="Delete Role", methods=['delete'])
         self.add_api_route('/{id}/created_at', self.get_role_created_at, name="Get Role Created At", methods=['get'])
+        self.add_api_route('/{id}/updated_at', self.get_role_updated_at, name="Get Role Updated At", methods=['get'])
         self.add_api_route('/{id}/name', self.get_role_name, name="Get Role Name", methods=['get'])
         self.add_api_route('/{id}/name', self.put_role_name, name="Put Role Name", methods=['put'])
 
@@ -214,19 +219,27 @@ class RoleRouter(APIRouter):
 
     async def put_role(self, id: Annotated[Positive[int], Path()], role: Annotated[RoleRequestSchema, Body()]) -> RoleResponseSchema:
         try:
-            return await self.svc().update(id, RoleModel.model_validate(role))
+            model = await self.svc().update(id, RoleModel.model_validate(role))
+            return RoleResponseSchema.model_validate(model)
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Role not found.")
 
     async def delete_role(self, id: Annotated[Positive[int], Path()]) -> RoleResponseSchema:
         try:
-            return await self.svc().delete(id)
+            model = await self.svc().delete(id)
+            return RoleResponseSchema.model_validate(model)
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Role not found.")
 
     async def get_role_created_at(self, id: Annotated[Positive[int], Path()]) -> datetime:
         try:
             return await self.svc().get_created_at(id)
+        except EntityNotFound:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Role not found.")
+
+    async def get_role_updated_at(self, id: Annotated[Positive[int], Path()]) -> datetime:
+        try:
+            return await self.svc().get_updated_at(id)
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Role not found.")
 
@@ -246,15 +259,21 @@ class UserRouter(APIRouter):
     def __init__(self, prefix: str, user_service_factory: Callable[[], UserService]) -> None:
         super().__init__(prefix=prefix)
         self.svc = user_service_factory
-        self.add_api_route('/', self.create_user, name="Create User", methods=['post'])
-        self.add_api_route('/{account_id}/full', self.get_full_user, name="Get Full User", methods=['get'])
+        self.add_api_route('/', self.post_user, name="Post User", methods=['post'])
+        self.add_api_route('/{user_id}', self.get_user, name="Get User", methods=['get'])
 
-    async def create_user(self, user: Annotated[UserRequestSchema, Body()]) -> UserResponseSchema:
-        user_obj = await self.svc().create_user(user)
-        return UserResponseSchema.model_validate(user_obj)
+    async def post_user(self, user: Annotated[UserRequestSchema, Body()]) -> UserResponseSchema:
+        account = AccountModel.model_validate(user.account)
+        profile = ProfileModel.model_validate(user.profile)
+        user_model = UserModel(
+            account=account,
+            profile=profile
+        )
+        model = await self.svc().add(user_model)
+        return UserResponseSchema.model_validate(model)
 
-    async def get_full_user(self, account_id: Annotated[Positive[int], Path()]) -> UserResponseSchema:
-        user = await self.svc().get_full_user(account_id)
+    async def get_user(self, user_id: Annotated[Positive[int], Path()]) -> UserResponseSchema:
+        user = await self.svc().find_by_id(user_id)
         if not user:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found.")
         return UserResponseSchema.model_validate(user)

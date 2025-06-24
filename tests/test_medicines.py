@@ -89,7 +89,7 @@ def get_medicines[T: MedicineModel | MedicineRequestSchema](model: type[T]) -> l
 @pytest.mark.parametrize('RequestSchema,ResponseSchema,mp', [
     (MedicineModel, MedicineModel, InMemoryMedicineRepository()),
     (MedicineModel, MedicineModel, MedicineService(InMemoryMedicineRepository())),
-    (MedicineRequestSchema, MedicineResponseSchema, MedicineApiClient('http://127.0.0.1:8000')),
+    (MedicineRequestSchema, MedicineResponseSchema, MedicineApiClient('http://127.0.0.1:8080')),
 ])
 async def test_persistance(RequestSchema: type[MedicineModel | MedicineRequestSchema],
                            ResponseSchema: type[MedicineModel | MedicineResponseSchema],

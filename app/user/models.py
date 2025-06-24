@@ -1,4 +1,5 @@
 from app.base.models import SQLModel, MappedColumn
+from sqlmodel import Relationship
 from typing import Literal, Annotated
 from datetime import datetime, date
 
@@ -13,7 +14,8 @@ class AccountModel(SQLModel, table=True):
     enabled: Annotated[bool, MappedColumn(True)]
     profile_id: Annotated[int, MappedColumn(gt=0, foreign_key="profiles.id", index=True)]
     role_id: Annotated[int, MappedColumn(gt=0, foreign_key="roles.id", index=True)]
-
+    profile: Annotated['ProfileModel', Relationship(back_populates='accounts')]
+    role: Annotated['RoleModel', Relationship(back_populates='accounts')]
 
 ProfileAttribute = Literal['id', 'created_at', 'name', 'paternal', 'maternal', 'birthdate', 'phone']
 

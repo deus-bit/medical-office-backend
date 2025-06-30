@@ -225,14 +225,12 @@ def parse_last_retrieved(last_retrieved, model, order_by):
     if len(last_retrieved) == 2:
         field = model.model_fields[order_by[0]]
         expected_type = field.annotation
-        # Only cast if not already correct type
         if not isinstance(last_retrieved[1], expected_type):
             if expected_type is datetime:
                 last_retrieved[1] = datetime.fromisoformat(last_retrieved[1])
             else:
                 last_retrieved[1] = expected_type(last_retrieved[1])
     if len(last_retrieved) >= 1:
-        # id is usually int, but you can generalize if needed
         if not isinstance(last_retrieved[0], int):
             last_retrieved[0] = int(last_retrieved[0])
     return last_retrieved

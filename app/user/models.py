@@ -8,10 +8,13 @@ AccountAttribute = Literal['id', 'updated_at', 'email', 'password', 'enabled']
 class AccountModel(SQLModel, table=True):
     __tablename__ = 'accounts'
 
+    id: Annotated[int | None, MappedColumn(gt=0, primary_key=True, foreign_key="users.id")]
     updated_at: Annotated[datetime, MappedColumn(default_factory=datetime.now)]
     email: Annotated[str, MappedColumn(max_length=127)]
     password: Annotated[bytes, MappedColumn(max_length=32)]
     enabled: Annotated[bool, MappedColumn(True)]
+
+    user: Annotated["UserModel", Relationship(sa_relationship_kwargs={"uselist": False}, back_populates="account")]
 
 
 ProfileAttribute = Literal['id', 'updated_at', 'name', 'paternal', 'maternal', 'birthdate', 'phone']
@@ -19,12 +22,15 @@ ProfileAttribute = Literal['id', 'updated_at', 'name', 'paternal', 'maternal', '
 class ProfileModel(SQLModel, table=True):
     __tablename__ = 'profiles'
 
+    id: Annotated[int | None, MappedColumn(gt=0, primary_key=True, foreign_key="users.id")]
     updated_at: Annotated[datetime, MappedColumn(default_factory=datetime.now)]
     name: Annotated[str, MappedColumn(max_length=63)]
     paternal: Annotated[str, MappedColumn(max_length=31)]
     maternal: Annotated[str, MappedColumn(max_length=31)]
     phone: Annotated[int | None, MappedColumn(None, ge=60_000_000, lt=80_000_000, nullable=True)]
     birthdate: Annotated[date, MappedColumn()]
+
+    user: Annotated["UserModel", Relationship(sa_relationship_kwargs={"uselist": False}, back_populates="profile")]
 
 
 RoleAttribute = Literal['id', 'created_at', 'updated_at', 'name']
@@ -36,17 +42,17 @@ class RoleModel(SQLModel, table=True):
     updated_at: Annotated[datetime, MappedColumn(default_factory=datetime.now)]
     name: Annotated[str, MappedColumn(max_length=127, unique=True, index=True)]
 
+    users: Annotated[list["UserModel"], Relationship(back_populates="role")]
 
-UserAttribute = Literal['id', 'account_id', 'profile_id', 'role_id']
+
+UserAttribute = Literal['id', 'created_at', 'role_id']
 
 class UserModel(SQLModel, table=True):
     __tablename__ = 'users'
 
     created_at: Annotated[datetime, MappedColumn(default_factory=datetime.now)]
-    account_id: Annotated[int, MappedColumn(gt=0, foreign_key="accounts.id", unique=True)]
-    profile_id: Annotated[int, MappedColumn(gt=0, foreign_key="profiles.id", unique=True)]
-    role_id: Annotated[int, MappedColumn(gt=0, foreign_key="roles.id", unique=True)]
+    role_id: Annotated[int | None, MappedColumn(gt=0, foreign_key="roles.id")]
 
-    account: Annotated[AccountModel, Relationship(sa_relationship_kwargs={"uselist": False})]
-    profile: Annotated[ProfileModel, Relationship(sa_relationship_kwargs={"uselist": False})]
-    role: Annotated[RoleModel, Relationship(sa_relationship_kwargs={"uselist": False})]
+    role: Annotated[RoleModel, Relationship(sa_relationship_kwargs={"uselist": False}, back_populates="users")]
+    account: Annotated[AccountModel, Relationship(sa_relationship_kwargs={"uselist": False}, back_populates="user")]
+    profile: Annotated[ProfileModel, Relationship(sa_relationship_kwargs={"uselist": False}, back_populates="user")]

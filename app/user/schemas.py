@@ -43,6 +43,8 @@ class UserRequestSchema(BaseModel):
 
 
 class UserResponseSchema(BaseModel):
+    id: Annotated[int, Field(gt=0)]
+    created_at: Annotated[datetime, Field()]
     account: AccountResponseSchema
     profile: ProfileResponseSchema
     role: RoleResponseSchema

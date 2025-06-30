@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Path, Query, Body
+from fastapi import APIRouter, HTTPException, status, Path, Body
 from app.medicine.repositories import MedicineFindQuery
 from app.medicine.services import MedicineService
 from app.medicine.schemas import MedicineRequestSchema, MedicineResponseSchema
@@ -48,7 +48,8 @@ class MedicineRouter(APIRouter):
         }
         ~~~
         """
-        return MedicineResponseSchema.model_validate((await self.svc().add(MedicineModel.model_validate(medicine))).model_dump())
+        model = await self.svc().add(MedicineModel.model_validate(medicine))
+        return MedicineResponseSchema.model_validate(model)
 
     async def get_medicine(self, id: Annotated[Positive[int], Path()]) -> MedicineResponseSchema:
         """
@@ -57,9 +58,9 @@ class MedicineRouter(APIRouter):
           - http://localhost:8000/v1/medicine/102?attr=name
         """
         try:
-            medicine: MedicineModel | None = await self.svc().find_by_id(id)
-            if medicine:
-                return MedicineResponseSchema.model_validate(medicine)
+            model: MedicineModel | None = await self.svc().find_by_id(id)
+            if model:
+                return MedicineResponseSchema.model_validate(model)
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Medicine not found.")
         except ConnectionTimeout:
             raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Database connection timeout.")

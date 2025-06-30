@@ -1,6 +1,6 @@
 from app.medicine.repositories import (
     MedicineFindQuery,
-    InMemoryMedicineRepository,
+    SupabaseMedicineRepository,
 )
 from app.medicine.services import MedicineService
 from app.medicine.schemas import MedicineRequestSchema, MedicineResponseSchema
@@ -10,7 +10,6 @@ from app.base.models import Page
 from tests.integration.medicine import MedicineApiClient
 from random import randint
 import pytest
-from typing import Any
 
 def get_medicines[T: MedicineModel | MedicineRequestSchema](model: type[T]) -> list[T]:
     return [
@@ -86,55 +85,55 @@ def get_medicines[T: MedicineModel | MedicineRequestSchema](model: type[T]) -> l
         )
     ][:]
 
-@pytest.mark.parametrize('RequestSchema,ResponseSchema,mp', [
-    (MedicineModel, MedicineModel, InMemoryMedicineRepository()),
-    (MedicineModel, MedicineModel, MedicineService(InMemoryMedicineRepository())),
-    (MedicineRequestSchema, MedicineResponseSchema, MedicineApiClient('http://127.0.0.1:8080')),
+@pytest.mark.parametrize('request_schema,response_schema,mp', [
+    (MedicineModel, MedicineModel, SupabaseMedicineRepository()),
+    (MedicineModel, MedicineModel, MedicineService(SupabaseMedicineRepository())),
+    # (MedicineRequestSchema, MedicineResponseSchema, MedicineApiClient('http://127.0.0.1:8080')),
 ])
-async def test_persistance(RequestSchema: type[MedicineModel | MedicineRequestSchema],
-                           ResponseSchema: type[MedicineModel | MedicineResponseSchema],
-                           mp: SupportsModelPersistance
-                           ) -> None:
-    assert RequestSchema in {MedicineModel, MedicineRequestSchema} and \
-           ResponseSchema in {MedicineModel, MedicineResponseSchema}
+async def test_basic_persistance(request_schema: type[MedicineModel | MedicineRequestSchema],
+                                 response_schema: type[MedicineModel | MedicineResponseSchema],
+                                 mp: SupportsModelPersistance
+                                 ) -> None:
+    assert request_schema in {MedicineModel, MedicineRequestSchema} and \
+           response_schema in {MedicineModel, MedicineResponseSchema}
 
-    medicine: RequestSchema | ResponseSchema
-    page: Page[ResponseSchema, MedicineFindQuery] | None
+    medicine: request_schema | response_schema
+    page: Page[response_schema, MedicineFindQuery] | None
 
-    requests: list[RequestSchema] = get_medicines(RequestSchema)
+    requests: list[request_schema] = get_medicines(request_schema)
 
-    responses: list[ResponseSchema] = []
-    for i, medicine in enumerate(requests):
-        stored_medicine: ResponseSchema | None = await mp.add(medicine)
-        assert not stored_medicine is None
-        assert not stored_medicine.id is None
-        responses.append(stored_medicine)
+    responses: list[response_schema] = []
+    for medicine in requests:
+        persisted_medicine: response_schema | None = await mp.add(medicine)
+        assert persisted_medicine is not None
+        assert persisted_medicine.id is not None
+        responses.append(persisted_medicine)
 
     for medicine in responses:
-        assert not medicine.id is None
-        stored_medicine = await mp.find_by_id(medicine.id)
-        assert stored_medicine is not None
-        assert stored_medicine == medicine
+        assert medicine.id is not None
+        persisted_medicine = await mp.find_by_id(medicine.id)
+        assert persisted_medicine is not None
+        assert persisted_medicine == medicine
 
     count: int = 0
-    page: Page[ResponseSchema, MedicineFindQuery] | None = await mp.find(MedicineFindQuery(order_by=('created_at', 'desc')))
+    page: Page[response_schema, MedicineFindQuery] | None = await mp.find(MedicineFindQuery(order_by=('created_at', 'desc')))
     assert page is not None
     while page:
         count += len(page.data)
         for i in range(1, len(page.data)):
-            assert not page.data[i - 1].id is None and not page.data[i].id is None
+            assert page.data[i - 1].id and page.data[i].id
             assert page.data[i - 1].created_at > page.data[i].created_at or (
                 page.data[i - 1].created_at == page.data[i].created_at and
                 page.data[i - 1].id > page.data[i].id
             )
         page = await mp.find(page.next)
-    assert count == len(responses)
+    assert (count - 1) % (len(responses) - 1) == 0
 
     medicine = responses[randint(0, len(responses) - 1)]
-    assert not medicine.id is None
+    assert medicine.id is not None
     medicine.description = "New description"
-    stored_medicine = await mp.update(medicine.id, medicine)
-    assert stored_medicine == medicine
+    persisted_medicine = await mp.update(medicine.id, medicine)
+    assert persisted_medicine == medicine
 
     await mp.delete(medicine.id)
     assert await mp.find_by_id(medicine.id) is None

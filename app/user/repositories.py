@@ -29,7 +29,7 @@ class AccountRepository(BaseRepository[AccountModel, AccountFindQuery], ABC):
     ...
 
 
-class InMemoryAccountRepository(SQLRepository[AccountModel, AccountFindQuery]):
+class InMemoryAccountRepository(SQLRepository[AccountModel, AccountFindQuery], AccountRepository):
     @override
     def __init__(self) -> None:
         super().__init__(
@@ -42,7 +42,7 @@ class InMemoryAccountRepository(SQLRepository[AccountModel, AccountFindQuery]):
         )
 
 
-class SupabaseAccountRepository(SQLRepository[AccountModel, AccountFindQuery]):
+class SupabaseAccountRepository(SQLRepository[AccountModel, AccountFindQuery], AccountRepository):
     @override
     def __init__(self) -> None:
         super().__init__(
@@ -70,7 +70,7 @@ class ProfileRepository(BaseRepository[ProfileModel, ProfileFindQuery], ABC):
     ...
 
 
-class InMemoryProfileRepository(SQLRepository[ProfileModel, ProfileFindQuery]):
+class InMemoryProfileRepository(SQLRepository[ProfileModel, ProfileFindQuery], ProfileRepository):
     @override
     def __init__(self) -> None:
         super().__init__(
@@ -83,7 +83,7 @@ class InMemoryProfileRepository(SQLRepository[ProfileModel, ProfileFindQuery]):
         )
 
 
-class SupabaseProfileRepository(SQLRepository[ProfileModel, ProfileFindQuery]):
+class SupabaseProfileRepository(SQLRepository[ProfileModel, ProfileFindQuery], ProfileRepository):
     @override
     def __init__(self) -> None:
         super().__init__(
@@ -121,7 +121,7 @@ class RoleSQLRepository(SQLRepository[RoleModel, RoleFindQuery], RoleRepository)
         return self.session.exec(select(self.model).where(getattr(self.model, 'name') == name)).first()
 
 
-class InMemoryRoleRepository(RoleSQLRepository):
+class InMemoryRoleRepository(RoleSQLRepository, RoleRepository):
     @override
     def __init__(self) -> None:
         super().__init__(
@@ -134,7 +134,7 @@ class InMemoryRoleRepository(RoleSQLRepository):
         )
 
 
-class SupabaseRoleRepository(RoleSQLRepository):
+class SupabaseRoleRepository(RoleSQLRepository, RoleRepository):
     @override
     def __init__(self) -> None:
         super().__init__(
@@ -147,8 +147,6 @@ class SupabaseRoleRepository(RoleSQLRepository):
 class UserFilterBy(FilterBy, total=False):
     id: Interval[int]
     created_at: Interval[datetime]
-    account_id: Interval[int]
-    profile_id: Interval[int]
     role_id: Interval[int]
 
 
@@ -160,7 +158,7 @@ class UserRepository(BaseRepository[UserModel, UserFindQuery], ABC):
     ...
 
 
-class InMemoryUserRepository(SQLRepository[UserModel, UserFindQuery]):
+class InMemoryUserRepository(SQLRepository[UserModel, UserFindQuery], UserRepository):
     @override
     def __init__(self) -> None:
         super().__init__(
@@ -173,7 +171,7 @@ class InMemoryUserRepository(SQLRepository[UserModel, UserFindQuery]):
         )
 
 
-class SupabaseUserRepository(SQLRepository[UserModel, UserFindQuery]):
+class SupabaseUserRepository(SQLRepository[UserModel, UserFindQuery], UserRepository):
     @override
     def __init__(self) -> None:
         super().__init__(

@@ -1,6 +1,6 @@
 from app.medicine.repositories import (
     MedicineFindQuery,
-    SupabaseMedicineRepository,
+    InMemoryMedicineRepository,
 )
 from app.medicine.services import MedicineService
 from app.medicine.schemas import MedicineRequestSchema, MedicineResponseSchema
@@ -86,8 +86,8 @@ def get_medicines[T: MedicineModel | MedicineRequestSchema](model: type[T]) -> l
     ][:]
 
 @pytest.mark.parametrize('request_schema,response_schema,mp', [
-    (MedicineModel, MedicineModel, SupabaseMedicineRepository()),
-    (MedicineModel, MedicineModel, MedicineService(SupabaseMedicineRepository())),
+    (MedicineModel, MedicineModel, InMemoryMedicineRepository()),
+    (MedicineModel, MedicineModel, MedicineService(InMemoryMedicineRepository())),
     # (MedicineRequestSchema, MedicineResponseSchema, MedicineApiClient('http://127.0.0.1:8080')),
 ])
 async def test_basic_persistance(request_schema: type[MedicineModel | MedicineRequestSchema],

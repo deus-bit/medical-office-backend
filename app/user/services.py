@@ -9,6 +9,7 @@ from app.base.services import BaseService
 from app.exceptions import *
 from app.utils import Positive
 from datetime import datetime, date
+from collections.abc import Callable
 from typing import override
 
 class AccountService(BaseService[AccountModel, AccountRepository, AccountFindQuery]):
@@ -147,18 +148,12 @@ class RoleService(BaseService[RoleModel, RoleRepository, RoleFindQuery]):
     async def find_by_name(self, name: str) -> RoleModel | None:
         return await self.repo.find_by_name(name)
 
-    async def get_users(self, id: Positive[int]) -> list[UserModel]:
-        role: RoleModel | None = await self.find_by_id(id)
-        if not role:
-            raise EntityNotFound()
-        return role.users
-
 
 class UserService(BaseService[UserModel, UserRepository, UserFindQuery]):
     def __init__(self, repository: UserRepository,
-                 account_service: AccountService,
-                 profile_service: ProfileService,
-                 role_service: RoleService,
+                 account_service: Callable[[], AccountService],
+                 profile_service: Callable[[], ProfileService],
+                 role_service: Callable[[], RoleService],
                  ) -> None:
         super().__init__(repository)
         self.account_service = account_service
@@ -167,33 +162,18 @@ class UserService(BaseService[UserModel, UserRepository, UserFindQuery]):
 
     @override
     async def add(self, model: UserModel) -> UserModel:
-        if not model.account or not model.profile:
-            raise ValueError("UserModel must have account and profile data for creation.")
+        if not model.account or not model.profile or not model.role:
+            raise ValueError(f"UserModel must have account, profile and role data for creation.")
 
-        user_to_persist = UserModel(
-            role_id=model.role_id,
-        )
-        persisted_user = await super().add(user_to_persist)
+        role = await self.role_service().find_by_name(model.role.name)
 
-        if persisted_user.id is None:
-            raise ValueError("User ID is None after creation.")
-
-        model.account.id = persisted_user.id
-        model.profile.id = persisted_user.id
-
-        persisted_account = await self.account_service.add(model.account)
-        persisted_profile = await self.profile_service.add(model.profile)
-
-        if persisted_user.role_id is None:
-            raise ValueError("User role_id is None.")
-
-        role = await self.role_service.find_by_id(persisted_user.role_id)
         if not role:
-            raise EntityNotFound("Role not found.")
+            raise EntityNotFound("Role not found based on provided name.")
 
-        persisted_user.account = persisted_account
-        persisted_user.profile = persisted_profile
-        persisted_user.role = role
+        model.role = role
+        model.role_id = role.id
+
+        persisted_user = await super().add(model)
 
         return persisted_user
 
@@ -205,16 +185,8 @@ class UserService(BaseService[UserModel, UserRepository, UserFindQuery]):
 
         assert user.id and user.role_id
 
-        account = await self.account_service.find_by_id(user.id)
-        profile = await self.profile_service.find_by_id(user.id)
-        role = await self.role_service.find_by_id(user.role_id)
-
-        if not account or not profile or not role:
+        if not user.account or not user.profile or not user.role:
             raise ValueError(f"Data inconsistency for User ID {id}: missing account, profile, or role.")
-
-        user.account = account
-        user.profile = profile
-        user.role = role
 
         return user
 
@@ -243,24 +215,22 @@ class UserService(BaseService[UserModel, UserRepository, UserFindQuery]):
         return user.profile
 
     async def update_role_by_id(self, id: Positive[int], role_id: int) -> UserModel:
-        """Update the user's role by role_id."""
         user: UserModel | None = await self.find_by_id(id)
         if not user:
             raise EntityNotFound()
         user.role_id = role_id
         updated = await self.repo.update(id, user)
-        role = await self.role_service.find_by_id(role_id)
+        role = await self.role_service().find_by_id(role_id)
         if not role:
             raise EntityNotFound("Role not found.")
         updated.role = role
         return updated
 
     async def update_role_by_name(self, id: Positive[int], role_name: str) -> UserModel:
-        """Update the user's role by role name (unique)."""
         user: UserModel | None = await self.find_by_id(id)
         if not user:
             raise EntityNotFound()
-        role = await self.role_service.find_by_name(role_name)
+        role = await self.role_service().find_by_name(role_name)
         if not role:
             raise EntityNotFound("Role not found.")
         user.role_id = role.id

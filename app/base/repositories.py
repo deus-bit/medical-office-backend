@@ -29,14 +29,13 @@ class SQLRepository[Model: SQLModel, Query: FindQuery](BaseRepository):
             yield session
         except exc.TimeoutError:
             raise ConnectionTimeout()
-        except Exception:
-            session.rollback()
         finally:
+            session.rollback()
             session.close()
 
     @override
     async def add(self, model: Model) -> Model:
-        if model.id:
+        if model.id and await self.find_by_id(model.id):
             raise EntityAlreadyExists()
         return await self.upsert(model)
 
@@ -102,15 +101,11 @@ class SQLRepository[Model: SQLModel, Query: FindQuery](BaseRepository):
 
     @override
     async def delete(self, id: Positive[int]) -> Model:
-        stored_model = await self.find_by_id(id)
+        stored_model: Model | None = self.session.get(self.model, id)
         if stored_model:
-            proc = self._proc_name('Delete')
-            with self.engine.connect() as conn:
-                result = conn.execute(text(f"CALL {proc}(:id)"), {'id': id})
-                row = result.mappings().fetchone()
-                if not row:
-                    raise EntityNotFound()
-                return self.model(**row)
+            self.session.delete(stored_model)
+            self.session.commit()
+            return stored_model
         raise EntityNotFound()
 
     @override

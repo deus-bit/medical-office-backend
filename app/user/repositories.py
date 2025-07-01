@@ -118,7 +118,7 @@ class RoleSQLRepository(SQLRepository[RoleModel, RoleFindQuery], RoleRepository)
 
     async def find_by_name(self, name: str) -> RoleModel | None:
         assert isinstance(name, str), "Name must be a string."
-        return self.session.exec(select(self.model).where(getattr(self.model, 'name') == name)).first()
+        return self.session.exec(select(self.model).where(self.model.name == name)).first()
 
 
 class InMemoryRoleRepository(RoleSQLRepository, RoleRepository):

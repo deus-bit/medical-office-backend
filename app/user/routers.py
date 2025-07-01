@@ -275,34 +275,20 @@ class UserRouter(APIRouter):
         self.add_api_route('/{id}/profile', self.get_user_profile, name="Get User Profile", methods=['get'])
 
     async def post_user(self, user: Annotated[UserRequestSchema, Body()]) -> UserResponseSchema:
-        account = AccountModel.model_validate(user.account)
-        profile = ProfileModel.model_validate(user.profile)
-        role_id = None
-        if user.role and user.role.name:
-            role = await self.svc().role_service.find_by_name(user.role.name)
-            if not role:
-                raise HTTPException(status.HTTP_404_NOT_FOUND, "Role not found.")
-            role_id = role.id
-        user_model = UserModel(
-            account=account,
-            profile=profile,
-            role_id=role_id
-        )
-        model = await self.svc().add(user_model)
+        model = await self.svc().add(UserModel.model_validate(user))
         return UserResponseSchema.model_validate(model)
 
     async def find_users(self, query: Annotated[UserFindQuery, Body()]) -> Page[UserResponseSchema, UserFindQuery] | None:
         try:
             if query.last:
-                query.last = parse_last_retrieved(list(query.last), UserModel, query.order_by)
+                query.last = parse_last_retrieved(query.last, UserModel, query.order_by)
             page = await self.svc().find(query)
             if not page:
                 return None
-            response_page = Page[UserResponseSchema, UserFindQuery](
+            return Page[UserResponseSchema, UserFindQuery](
                 next=page.next,
                 data=[UserResponseSchema.model_validate(user) for user in page.data],
             )
-            return response_page
         except ConnectionTimeout:
             raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Database connection timeout.")
 
@@ -314,20 +300,8 @@ class UserRouter(APIRouter):
 
     async def put_user(self, id: Annotated[Positive[int], Path()], user: Annotated[UserRequestSchema, Body()]) -> UserResponseSchema:
         try:
-            user_model = await self.svc().find_by_id(id)
-            if not user_model:
-                raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found.")
-            if user.account:
-                user_model.account = AccountModel.model_validate(user.account)
-            if user.profile:
-                user_model.profile = ProfileModel.model_validate(user.profile)
-            if user.role and user.role.name:
-                role = await self.svc().role_service.find_by_name(user.role.name)
-                if not role:
-                    raise HTTPException(status.HTTP_404_NOT_FOUND, "Role not found.")
-                user_model.role_id = role.id
-            updated = await self.svc().update(id, user_model)
-            return UserResponseSchema.model_validate(updated)
+            model = await self.svc().update(id, UserModel.model_validate(user))
+            return UserResponseSchema.model_validate(model)
         except EntityNotFound:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found.")
 
